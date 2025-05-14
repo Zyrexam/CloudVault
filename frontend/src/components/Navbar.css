@@ -1,0 +1,274 @@
+.navbar {
+  height: 56px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #4f46e5;
+}
+
+.nav-link.active {
+  color: #4f46e5;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-signin {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4f46e5;
+  background-color: #eff6ff;
+  border: 1px solid #e0e7ff;
+  border-radius: 0.375rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-signin:hover {
+  color: #4338ca;
+  background-color: #dbeafe;
+}
+
+.btn-signout {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #dc2626;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-signout:hover {
+  background-color: #fecaca;
+}
+
+/* User Menu Styles */
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.user-profile:hover {
+  background-color: #f3f4f6;
+}
+
+.profile-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-initial {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #4f46e5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* Profile Menu Styles */
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 280px;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.profile-menu-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.profile-menu-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-menu-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-menu-initial {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4f46e5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.profile-menu-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.profile-menu-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.profile-menu-email {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.profile-menu-items {
+  padding: 0.5rem;
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  text-align: left;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-menu-item.signout {
+  color: #dc2626;
+}
+
+.profile-menu-item.signout:hover {
+  background-color: #fee2e2;
+}
+
+.profile-menu-item.signout i {
+  color: #dc2626;
+}
+
+/* Fix search bar overlap */
+.dashboard-header {
+  margin-top: 56px; /* Same as navbar height */
+  position: sticky;
+  top: 56px; /* Same as navbar height */
+  z-index: 10;
+  background-color: white;
+}
+
+.dashboard-content {
+  padding-top: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .navbar-container {
+    padding: 0 0.5rem;
+  }
+  
+  .auth-buttons {
+    gap: 0.5rem;
+  }
+
+  .profile-menu {
+    width: 250px;
+  }
+} 
