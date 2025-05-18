@@ -48,3 +48,13 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+
+CloudVault\.gitignore
+# ...existing code...
+
+# Firebase/GCP credentials
+Backend/src/main/resources/service-account-key.json
+Backend/src/main/resources/firebase-service-account.json
+!Backend/src/main/resources/service-account-key.example.json
