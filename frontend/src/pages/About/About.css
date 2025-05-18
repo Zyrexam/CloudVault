@@ -1,16 +1,20 @@
 .about-page {
-  padding-top: 56px; /* Account for fixed navbar */
+  width: 100vw;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  padding-top: 56px; /* Account for fixed navbar */
   background-color: #ffffff;
 }
 
 .about-hero {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  padding: 6rem 2rem;
+  padding: 7rem 2rem 5rem 2rem;
   text-align: center;
-  color: white;
+  color: #fff;
+  border-radius: 0 0 2rem 2rem;
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.1);
   position: relative;
-  overflow: hidden;
 }
 
 .about-hero::before {
@@ -50,15 +54,17 @@
 .hero-stats {
   display: flex;
   justify-content: center;
-  gap: 4rem;
+  gap: 5rem;
   margin-top: 3rem;
+  font-size: 1.3rem;
   animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
 .stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
 }
 
 .stat-number {
@@ -76,8 +82,8 @@
 }
 
 .about-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100vw;
+  margin: 0;
   padding: 4rem 2rem;
 }
 

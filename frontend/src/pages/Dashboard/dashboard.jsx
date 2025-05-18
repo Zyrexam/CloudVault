@@ -1,22 +1,24 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { auth } from "../../config/firebase"
-import "./Dashboard.css"
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { auth } from "../../config/firebase";
+import "./Dashboard.css";
+
+import { getAuth } from "firebase/auth";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [files, setFiles] = useState([])
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  const fileInputRef = React.useRef(null)
-  const navigate = useNavigate()
-  const [showPreviewModal, setShowPreviewModal] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState('')
-  const [previewFile, setPreviewFile] = useState(null)
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [files, setFiles] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const fileInputRef = React.useRef(null);
+  const navigate = useNavigate();
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewFile, setPreviewFile] = useState(null);
 
   // Get current user from Firebase Auth
   const user = auth.currentUser;
@@ -25,7 +27,7 @@ const Dashboard = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
-        navigate('/');
+        navigate("/");
       }
     });
 
@@ -34,89 +36,118 @@ const Dashboard = () => {
 
   // Create user data object from authenticated user
   const userData = {
-    id: user?.uid || '',
-    name: user?.displayName || 'User',
-    email: user?.email || '',
-    storageUsed: 0, // We'll implement this with actual storage data later
-    storageLimit: 15, // GB - can be adjusted based on your requirements
+    id: user?.uid || "",
+    name: user?.displayName || "User",
+    email: user?.email || "",
+    storageUsed: 0,
+    storageLimit: 15, 
     avatar: user?.photoURL || "/placeholder.svg?height=40&width=40",
     gcpBucket: `cloud-vault-${user?.uid}`,
-  }
+  };
 
-  // Fetch files from backend
   useEffect(() => {
     if (user) {
       fetchFilesFromBackend(user.uid);
     }
   }, [user, activeTab]);
 
-  const fetchFilesFromBackend = async (userId) => {
-    try {
-      let endpoint = '/api/files';
-      if (activeTab === 'starred') {
-        endpoint += '/starred';
-      } else if (activeTab === 'recent') {
-        endpoint += '/recent';
-      }
-
-      const response = await fetch(endpoint, {
-        headers: {
-          'X-User-Id': userId
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch files');
-      }
-
-      const data = await response.json();
-      setFiles(data);
-    } catch (error) {
-      console.error('Error fetching files:', error);
-      // You might want to show an error message to the user here
+const fetchFilesFromBackend = async (userId) => {
+  try {
+    // Get fresh token
+    const token = await auth.currentUser?.getIdToken(true);
+    if (!token) {
+      console.error('No token available - user may not be authenticated');
+      navigate('/auth');
+      return;
     }
-  };
 
-  // Filter files based on active tab and search query
+    let endpoint = "http://localhost:8080/api/files";
+    if (activeTab === "starred") {
+      endpoint += "/starred";
+    } else if (activeTab === "recent") {
+      endpoint += "/recent";
+    }
+
+   
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'X-User-Id': userId
+    };
+
+    const response = await fetch(endpoint, {
+      headers,
+      credentials: 'include'
+    });
+
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.error('Authentication failed - redirecting to login');
+        navigate("/auth");
+        return;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Files fetched successfully:", data);
+    setFiles(data);
+  } catch (error) {
+    console.error("Error fetching files:", {
+      message: error.message,
+      stack: error.stack
+    });
+    setFiles([]);
+  }
+};
+
+
+
+// Filter files based on active tab and search query
   const filteredFiles = files.filter((file) => {
-    const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase())
-    if (activeTab === "all") return matchesSearch
-    if (activeTab === "starred") return file.starred && matchesSearch
+    const matchesSearch = file.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "starred") return file.starred && matchesSearch;
     if (activeTab === "recent") {
       // Consider files from the last 7 days as recent
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      return new Date(file.lastModified) >= sevenDaysAgo && matchesSearch
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      return new Date(file.lastModified) >= sevenDaysAgo && matchesSearch;
     }
-    return matchesSearch
-  })
+    return matchesSearch;
+  });
 
   // Get file icon based on file type
   const getFileIcon = (type) => {
     switch (type) {
       case "pdf":
-        return "fa-solid fa-file-pdf"
+        return "fa-solid fa-file-pdf";
       case "excel":
-        return "fa-solid fa-file-excel"
+        return "fa-solid fa-file-excel";
       case "image":
-        return "fa-solid fa-file-image"
+        return "fa-solid fa-file-image";
       case "powerpoint":
-        return "fa-solid fa-file-powerpoint"
+        return "fa-solid fa-file-powerpoint";
       case "video":
-        return "fa-solid fa-file-video"
+        return "fa-solid fa-file-video";
       case "archive":
-        return "fa-solid fa-file-zipper"
+        return "fa-solid fa-file-zipper";
       case "word":
-        return "fa-solid fa-file-word"
+        return "fa-solid fa-file-word";
       case "text":
-        return "fa-solid fa-file-lines"
+        return "fa-solid fa-file-lines";
       default:
-        return "fa-solid fa-file"
+        return "fa-solid fa-file";
     }
-  }
+  };
 
   // Calculate storage percentage
-  const storagePercentage = (userData.storageUsed / userData.storageLimit) * 100
+  const storagePercentage =
+    (userData.storageUsed / userData.storageLimit) * 100;
 
   // Handle file upload
   const handleFileUpload = async (event) => {
@@ -127,32 +158,42 @@ const Dashboard = () => {
     setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
 
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("http://localhost:8080/api/files/upload", {
+        method: "POST",
         headers: {
-          'X-User-Id': user.uid
+          Authorization: `Bearer ${token}`,
+          "X-User-Id": user.uid,
         },
-        body: formData
+        body: formData,
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        if (response.status === 401) {
+          navigate("/auth");
+          return;
+        }
+        throw new Error(`Upload failed: ${response.status}`);
       }
 
       const uploadedFile = await response.json();
-      setFiles(prevFiles => [uploadedFile, ...prevFiles]);
+      setFiles((prevFiles) => [uploadedFile, ...prevFiles]);
       setShowUploadModal(false);
     } catch (error) {
-      console.error('Error uploading file:', error);
-      // You might want to show an error message to the user here
+      console.error("Error uploading file:", error);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   };
@@ -160,19 +201,33 @@ const Dashboard = () => {
   // Handle file download
   const handleFileDownload = async (file) => {
     try {
-      const response = await fetch(`/api/files/${file.id}/download`, {
-        headers: {
-          'X-User-Id': user.uid
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(
+        `http://localhost:8080/api/files/${file.id}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-User-Id": user.uid,
+          },
+          credentials: "include",
         }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Download failed');
+        if (response.status === 401) {
+          navigate("/auth");
+          return;
+        }
+        throw new Error(`Download failed: ${response.status}`);
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = file.originalName;
       document.body.appendChild(a);
@@ -180,47 +235,71 @@ const Dashboard = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error downloading file:', error);
-      // You might want to show an error message to the user here
+      console.error("Error downloading file:", error);
     }
   };
 
   // Toggle star status
   const toggleStar = async (fileId) => {
     try {
-      const response = await fetch(`/api/files/${fileId}/star`, {
-        method: 'POST',
-        headers: {
-          'X-User-Id': user.uid
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to toggle star');
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error("No authentication token available");
       }
 
-      setFiles(prevFiles =>
-        prevFiles.map(file =>
+      const response = await fetch(
+        `http://localhost:8080/api/files/${fileId}/star`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-User-Id": user.uid,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          navigate("/auth");
+          return;
+        }
+        throw new Error(`Failed to toggle star: ${response.status}`);
+      }
+
+      // Update the file's starred status in the local state
+      setFiles((prevFiles) =>
+        prevFiles.map((file) =>
           file.id === fileId ? { ...file, starred: !file.starred } : file
         )
       );
     } catch (error) {
-      console.error('Error toggling star:', error);
-      // You might want to show an error message to the user here
+      console.error("Error toggling star:", error);
     }
   };
 
   // Handle file preview
   const handleFilePreview = async (file) => {
     try {
-      const response = await fetch(`/api/files/${file.id}/preview`, {
-        headers: {
-          'X-User-Id': user.uid
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(
+        `http://localhost:8080/api/files/${file.id}/preview`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-User-Id": user.uid,
+          },
+          credentials: "include",
         }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Preview not available');
+        throw new Error("Preview not available");
       }
 
       const previewUrl = await response.text();
@@ -228,33 +307,45 @@ const Dashboard = () => {
       setPreviewUrl(previewUrl);
       setShowPreviewModal(true);
     } catch (error) {
-      console.error('Error getting preview:', error);
-      // You might want to show an error message to the user here
+      console.error("Error getting preview:", error);
     }
   };
 
   // Handle file deletion
   const handleFileDelete = async (fileId) => {
-    if (!window.confirm('Are you sure you want to delete this file?')) {
+    if (!window.confirm("Are you sure you want to delete this file?")) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/files/${fileId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-User-Id': user.uid
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete file');
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error("No authentication token available");
       }
 
-      setFiles(prevFiles => prevFiles.filter(file => file.id !== fileId));
+      const response = await fetch(
+        `http://localhost:8080/api/files/${fileId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-User-Id": user.uid,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          navigate("/auth");
+          return;
+        }
+        throw new Error("Failed to delete file");
+      }
+
+      setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
     } catch (error) {
-      console.error('Error deleting file:', error);
-      // You might want to show an error message to the user here
+      console.error("Error deleting file:", error);
     }
   };
 
@@ -268,7 +359,10 @@ const Dashboard = () => {
         </div>
 
         <div className="sidebar-menu">
-          <button className={`sidebar-item ${activeTab === "all" ? "active" : ""}`} onClick={() => setActiveTab("all")}>
+          <button
+            className={`sidebar-item ${activeTab === "all" ? "active" : ""}`}
+            onClick={() => setActiveTab("all")}
+          >
             <i className="fa-solid fa-folder"></i>
             <span>All Files</span>
           </button>
@@ -282,7 +376,9 @@ const Dashboard = () => {
           </button>
 
           <button
-            className={`sidebar-item ${activeTab === "starred" ? "active" : ""}`}
+            className={`sidebar-item ${
+              activeTab === "starred" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("starred")}
           >
             <i className="fa-solid fa-star"></i>
@@ -303,7 +399,10 @@ const Dashboard = () => {
             </span>
           </div>
           <div className="storage-bar">
-            <div className="storage-fill" style={{ width: `${storagePercentage}%` }}></div>
+            <div
+              className="storage-fill"
+              style={{ width: `${storagePercentage}%` }}
+            ></div>
           </div>
           <div className="storage-details">
             <div className="storage-type">
@@ -347,7 +446,10 @@ const Dashboard = () => {
           </div>
 
           <div className="header-actions">
-            <button className="upload-btn" onClick={() => setShowUploadModal(true)}>
+            <button
+              className="upload-btn"
+              onClick={() => setShowUploadModal(true)}
+            >
               <i className="fa-solid fa-cloud-arrow-up"></i>
               <span>Upload</span>
             </button>
@@ -377,27 +479,33 @@ const Dashboard = () => {
                     <button
                       className="action-btn"
                       onClick={() => toggleStar(file.id)}
-                      title={file.starred ? "Remove from starred" : "Add to starred"}
+                      title={
+                        file.starred ? "Remove from starred" : "Add to starred"
+                      }
                     >
-                      <i className={`fa-${file.starred ? "solid" : "regular"} fa-star`}></i>
+                      <i
+                        className={`fa-${
+                          file.starred ? "solid" : "regular"
+                        } fa-star`}
+                      ></i>
                     </button>
-                    <button 
-                      className="action-btn" 
-                      onClick={() => handleFilePreview(file)} 
+                    <button
+                      className="action-btn"
+                      onClick={() => handleFilePreview(file)}
                       title="Preview file"
                     >
                       <i className="fa-solid fa-eye"></i>
                     </button>
-                    <button 
-                      className="action-btn" 
-                      onClick={() => handleFileDownload(file)} 
+                    <button
+                      className="action-btn"
+                      onClick={() => handleFileDownload(file)}
                       title="Download file"
                     >
                       <i className="fa-solid fa-download"></i>
                     </button>
-                    <button 
-                      className="action-btn" 
-                      onClick={() => handleFileDelete(file.id)} 
+                    <button
+                      className="action-btn"
+                      onClick={() => handleFileDelete(file.id)}
                       title="Delete file"
                     >
                       <i className="fa-solid fa-trash"></i>
@@ -411,7 +519,10 @@ const Dashboard = () => {
               <i className="fa-solid fa-folder-open"></i>
               <h2>No files found</h2>
               <p>Upload files or try a different search</p>
-              <button className="upload-btn-large" onClick={() => setShowUploadModal(true)}>
+              <button
+                className="upload-btn-large"
+                onClick={() => setShowUploadModal(true)}
+              >
                 <i className="fa-solid fa-cloud-arrow-up"></i>
                 <span>Upload Files</span>
               </button>
@@ -430,8 +541,8 @@ const Dashboard = () => {
                 className="close-btn"
                 onClick={() => {
                   if (!isUploading) {
-                    setShowUploadModal(false)
-                    setUploadProgress(0)
+                    setShowUploadModal(false);
+                    setUploadProgress(0);
                   }
                 }}
               >
@@ -449,13 +560,21 @@ const Dashboard = () => {
               {isUploading ? (
                 <div className="upload-progress">
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${uploadProgress}%` }}></div>
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
                   </div>
                   <span>{uploadProgress}%</span>
                 </div>
               ) : (
                 <div className="upload-dropzone">
-                  <input type="file" id="file-upload" onChange={handleFileUpload} ref={fileInputRef} />
+                  <input
+                    type="file"
+                    id="file-upload"
+                    onChange={handleFileUpload}
+                    ref={fileInputRef}
+                  />
                   <label htmlFor="file-upload">
                     <i className="fa-solid fa-file-arrow-up"></i>
                     <span>Choose a file or drag it here</span>
@@ -469,8 +588,8 @@ const Dashboard = () => {
                 className="cancel-btn"
                 onClick={() => {
                   if (!isUploading) {
-                    setShowUploadModal(false)
-                    setUploadProgress(0)
+                    setShowUploadModal(false);
+                    setUploadProgress(0);
                   }
                 }}
                 disabled={isUploading}
@@ -495,21 +614,24 @@ const Dashboard = () => {
           <div className="preview-modal">
             <div className="preview-modal-header">
               <h2>{previewFile.originalName}</h2>
-              <button className="close-btn" onClick={() => setShowPreviewModal(false)}>
+              <button
+                className="close-btn"
+                onClick={() => setShowPreviewModal(false)}
+              >
                 <i className="fa-solid fa-times"></i>
               </button>
             </div>
             <div className="preview-modal-content">
-              {previewFile.contentType.startsWith('image/') && (
+              {previewFile.contentType.startsWith("image/") && (
                 <img src={previewUrl} alt={previewFile.originalName} />
               )}
-              {previewFile.contentType.startsWith('video/') && (
+              {previewFile.contentType.startsWith("video/") && (
                 <video controls src={previewUrl} />
               )}
-              {previewFile.contentType.startsWith('audio/') && (
+              {previewFile.contentType.startsWith("audio/") && (
                 <audio controls src={previewUrl} />
               )}
-              {previewFile.contentType === 'application/pdf' && (
+              {previewFile.contentType === "application/pdf" && (
                 <iframe src={previewUrl} title={previewFile.originalName} />
               )}
             </div>
@@ -517,8 +639,7 @@ const Dashboard = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
-
+export default Dashboard;

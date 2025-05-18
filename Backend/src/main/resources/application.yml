@@ -1,4 +1,7 @@
+
 spring:
+  application:
+    name: Backend
   servlet:
     multipart:
       max-file-size: 100MB
@@ -7,7 +10,7 @@ spring:
 server:
   port: 8080
   servlet:
-    context-path: /api
+    context-path: /
 
 firebase:
   bucket-name: cloudvault-456614
@@ -23,8 +26,10 @@ cors:
 gcp:
   project-id: cloudvault-456614
   bucket-name: cloudvault-456614
+  credentials:
+    location: D:/CloudVault/Backend/src/main/resources/service-account-key.json
 
 logging:
   level:
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
+    com.example.CloudVault: DEBUG
+    com.google.cloud: DEBUG
