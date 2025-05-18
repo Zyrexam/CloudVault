@@ -37,3 +37,12 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db 
+
+
+# ...existing code...
+
+# Firebase/GCP Credentials
+**/firebase-service-account.json
+**/service-account-key.json
+**/gcp-credentials.json
+**/firebase-adminsdk*.json
