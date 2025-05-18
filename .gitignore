@@ -1,27 +1,38 @@
 # IDE files
 .idea/
-*.iml
 .vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.springBeans
+.sts4-cache
 
-# Compiled files
+# Build directories
 target/
 build/
 dist/
-*.class
+out/
 
-# Dependency directories
+# Dependencies
 node_modules/
 .mvn/
+!.mvn/wrapper/maven-wrapper.jar
 
-# Environment files
+# Environment and secrets
 .env
 .env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Service account keys
+# Firebase/GCP Credentials
 **/service-account-key.json
-**/firebase-adminsdk.json
+**/firebase-service-account.json
 **/gcp-credentials.json
+**/firebase-adminsdk*.json
+!**/service-account-key.example.json
 
 # Logs
 *.log
@@ -36,13 +47,4 @@ yarn-error.log*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
-
-
-# ...existing code...
-
-# Firebase/GCP Credentials
-**/firebase-service-account.json
-**/service-account-key.json
-**/gcp-credentials.json
-**/firebase-adminsdk*.json
+Thumbs.db
