@@ -27,11 +27,10 @@ gcp:
   project-id:  cloudvault-dd16d
   bucket-name: cloudvault-dd16d.firebasestorage.app
   credentials:
-    location: D:/CloudVault/Backend/src/main/resources/service-account-key.json
+    location: src/main/resources/service-account-key.json
 
 logging:
   level:
     com.example.CloudVault: DEBUG
     com.google.cloud: DEBUG
-    com.google.firebase: DEBUG
 

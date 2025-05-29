@@ -74,31 +74,93 @@ public class FileController {
         }
     }
 
-
     @PostMapping("/upload")
     public ResponseEntity<FileMetadata> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestHeader("X-User-Id") String userId,
             @RequestHeader("Authorization") String authHeader) {
-        try {
-            // Optional: Verify the token matches the user ID for extra security
-            String token = authHeader.replace("Bearer ", "");
-            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
 
-            // Verify that the token's UID matches the provided user ID
-            if (!decodedToken.getUid().equals(userId)) {
-                logger.error("Token UID does not match provided user ID");
-                return ResponseEntity.status(403).build();
+        logger.info("=== FILE UPLOAD REQUEST ===");
+        logger.info("User ID: {}", userId);
+        logger.info("Auth header present: {}", authHeader != null);
+        logger.info("File name: {}", file != null ? file.getOriginalFilename() : "null");
+        logger.info("File size: {}", file != null ? file.getSize() : "null");
+        logger.info("Content type: {}", file != null ? file.getContentType() : "null");
+
+        try {
+            // Validate inputs
+            if (file == null || file.isEmpty()) {
+                logger.error("File is null or empty");
+                return ResponseEntity.badRequest().build();
             }
 
+            if (userId == null || userId.trim().isEmpty()) {
+                logger.error("User ID is null or empty");
+                return ResponseEntity.badRequest().build();
+            }
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                logger.error("Invalid authorization header");
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Optional: Verify the token matches the user ID for extra security
+            logger.info("Attempting to verify Firebase token...");
+            String token = authHeader.replace("Bearer ", "");
+
+            try {
+                FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
+                logger.info("Token verified successfully. UID: {}", decodedToken.getUid());
+
+                // Verify that the token's UID matches the provided user ID
+                if (!decodedToken.getUid().equals(userId)) {
+                    logger.error("Token UID ({}) does not match provided user ID ({})",
+                            decodedToken.getUid(), userId);
+                    return ResponseEntity.status(403).build();
+                }
+            } catch (Exception tokenException) {
+                logger.error("Firebase token verification failed", tokenException);
+                return ResponseEntity.status(401).build();
+            }
+
+            logger.info("Attempting to upload file via FirebaseFileService...");
             // Upload file and get metadata
             FileMetadata metadata = fileService.uploadFile(file, userId);
+            logger.info("File uploaded successfully. Metadata: {}", metadata);
+
             return ResponseEntity.ok(metadata);
+
         } catch (Exception e) {
             logger.error("Error uploading file for user: {}", userId, e);
+            logger.error("Exception type: {}", e.getClass().getSimpleName());
+            logger.error("Exception message: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
+//    @PostMapping("/upload")
+//    public ResponseEntity<FileMetadata> uploadFile(
+//            @RequestParam("file") MultipartFile file,
+//            @RequestHeader("X-User-Id") String userId,
+//            @RequestHeader("Authorization") String authHeader) {
+//        try {
+//            // Optional: Verify the token matches the user ID for extra security
+//            String token = authHeader.replace("Bearer ", "");
+//            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
+//
+//            // Verify that the token's UID matches the provided user ID
+//            if (!decodedToken.getUid().equals(userId)) {
+//                logger.error("Token UID does not match provided user ID");
+//                return ResponseEntity.status(403).build();
+//            }
+//
+//            // Upload file and get metadata
+//            FileMetadata metadata = fileService.uploadFile(file, userId);
+//            return ResponseEntity.ok(metadata);
+//        } catch (Exception e) {
+//            logger.error("Error uploading file for user: {}", userId, e);
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
     @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(
             @PathVariable String fileId,

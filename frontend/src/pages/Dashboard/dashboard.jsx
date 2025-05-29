@@ -145,41 +145,65 @@ const Dashboard = () => {
     (userData.storageUsed / userData.storageLimit) * 100;
 
   // Handle file upload
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     setIsUploading(true);
     setUploadProgress(0);
-
     try {
-      const token = await auth.currentUser?.getIdToken(true);
-      if (!token) {
-        throw new Error("No authentication token available");
+      console.log("Starting file upload for:", file.name);
+
+      // Debug: Check if user and token exist
+      console.log("User object:", user);
+      console.log("Has token:", !!user?.accessToken);
+
+      if (!user?.uid) {
+        console.error("No user UID available");
+        throw new Error("User not authenticated");
+      }
+
+      if (!user?.accessToken) {
+        console.error("No access token available");
+        throw new Error("No authentication token");
       }
 
       const formData = new FormData();
       formData.append("file", file);
 
+      // Debug: Log headers being sent
+      const headers = {
+        "X-User-Id": user.uid,
+        Authorization: `Bearer ${user.accessToken}`,
+      };
+      console.log("Request headers:", headers);
+      console.log("FormData file:", formData.get("file"));
+
       const response = await fetch("http://localhost:8080/api/files/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-User-Id": user.uid,
-        },
+        headers: headers,
         body: formData,
-        credentials: "include",
+        credentials: "include", // Include credentials for CORS
       });
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", [...response.headers.entries()]);
 
       if (!response.ok) {
         if (response.status === 401) {
           navigate("/auth");
           return;
         }
-        throw new Error(`Upload failed: ${response.status}`);
+        // Try to get error details from response
+        const errorText = await response.text();
+        console.error("Upload failed with status:", response.status);
+        console.error("Error response body:", errorText);
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
       }
 
       const uploadedFile = await response.json();
+      console.log("Upload successful:", uploadedFile);
 
       await fetchFilesFromBackend(user.uid);
 
@@ -187,6 +211,7 @@ const Dashboard = () => {
       setShowUploadModal(false);
     } catch (error) {
       console.error("Error uploading file:", error);
+      alert(`Upload failed: ${error.message}`);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -194,47 +219,47 @@ const Dashboard = () => {
         fileInputRef.current.value = "";
       }
     }
-  };
 
-  // Handle file download
-  const handleFileDownload = async (file) => {
-    try {
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) {
-        throw new Error("No authentication token available");
-      }
-
-      const response = await fetch(
-        `http://localhost:8080/api/files/${file.id}/download`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-User-Id": user.uid,
-          },
-          credentials: "include",
+    // Handle file download
+    const handleFileDownload = async (file) => {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) {
+          throw new Error("No authentication token available");
         }
-      );
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          navigate("/auth");
-          return;
+        const response = await fetch(
+          `http://localhost:8080/api/files/${file.id}/download`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "X-User-Id": user.uid,
+            },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            navigate("/auth");
+            return;
+          }
+          throw new Error(`Download failed: ${response.status}`);
         }
-        throw new Error(`Download failed: ${response.status}`);
-      }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.originalName;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error downloading file:", error);
-    }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.originalName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error("Error downloading file:", error);
+      }
+    };
   };
 
   // Toggle star status

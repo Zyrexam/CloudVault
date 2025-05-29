@@ -1,3 +1,5 @@
+
+
 package com.example.CloudVault.config;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -16,9 +18,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
-public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
 
+public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(FirebaseAuthenticationFilter.class);
+
     private final FirebaseAuth firebaseAuth;
 
     public FirebaseAuthenticationFilter(FirebaseAuth firebaseAuth) {
@@ -41,8 +44,7 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Missing or invalid Authorization header\"}");
+            response.getWriter().write("Missing or invalid Authorization header");
             return;
         }
 
@@ -62,8 +64,8 @@ public class FirebaseAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             logger.error("Error verifying Firebase token", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Invalid token\"}");
+            response.getWriter().write("Invalid token");
         }
     }
 }
+
