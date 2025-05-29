@@ -13,7 +13,7 @@ server:
     context-path: /
 
 firebase:
-  bucket-name: cloudvault-456614
+  bucket-name:  cloudvault-dd16d
   image-url: https://storage.googleapis.com/${firebase.bucket-name}/%s
 
 cors:
@@ -24,8 +24,8 @@ cors:
   exposed-headers: "*"
 
 gcp:
-  project-id: cloudvault-456614
-  bucket-name: cloudvault-456614
+  project-id:  cloudvault-dd16d
+  bucket-name: cloudvault-dd16d.firebasestorage.app
   credentials:
     location: D:/CloudVault/Backend/src/main/resources/service-account-key.json
 
@@ -33,3 +33,5 @@ logging:
   level:
     com.example.CloudVault: DEBUG
     com.google.cloud: DEBUG
+    com.google.firebase: DEBUG
+

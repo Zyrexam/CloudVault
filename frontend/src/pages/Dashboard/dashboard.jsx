@@ -40,7 +40,7 @@ const Dashboard = () => {
     name: user?.displayName || "User",
     email: user?.email || "",
     storageUsed: 0,
-    storageLimit: 15, 
+    storageLimit: 15,
     avatar: user?.photoURL || "/placeholder.svg?height=40&width=40",
     gcpBucket: `cloud-vault-${user?.uid}`,
   };
@@ -51,61 +51,56 @@ const Dashboard = () => {
     }
   }, [user, activeTab]);
 
-const fetchFilesFromBackend = async (userId) => {
-  try {
-    // Get fresh token
-    const token = await auth.currentUser?.getIdToken(true);
-    if (!token) {
-      console.error('No token available - user may not be authenticated');
-      navigate('/auth');
-      return;
-    }
-
-    let endpoint = "http://localhost:8080/api/files";
-    if (activeTab === "starred") {
-      endpoint += "/starred";
-    } else if (activeTab === "recent") {
-      endpoint += "/recent";
-    }
-
-   
-
-    const headers = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'X-User-Id': userId
-    };
-
-    const response = await fetch(endpoint, {
-      headers,
-      credentials: 'include'
-    });
-
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.error('Authentication failed - redirecting to login');
+  const fetchFilesFromBackend = async (userId) => {
+    try {
+      // Get fresh token
+      const token = await auth.currentUser?.getIdToken(true);
+      if (!token) {
+        console.error("No token available - user may not be authenticated");
         navigate("/auth");
         return;
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+
+      let endpoint = "http://localhost:8080/api/files";
+      if (activeTab === "starred") {
+        endpoint += "/starred";
+      } else if (activeTab === "recent") {
+        endpoint += "/recent";
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        // "Content-Type": "application/json",
+        "X-User-Id": userId,
+      };
+
+      const response = await fetch(endpoint, {
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error("Authentication failed - redirecting to login");
+          navigate("/auth");
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Files fetched successfully:", data);
+      setFiles(data);
+    } catch (error) {
+      console.error("Error fetching files:", {
+        message: error.message,
+        stack: error.stack,
+      });
+      setFiles([]);
     }
+  };
 
-    const data = await response.json();
-    console.log("Files fetched successfully:", data);
-    setFiles(data);
-  } catch (error) {
-    console.error("Error fetching files:", {
-      message: error.message,
-      stack: error.stack
-    });
-    setFiles([]);
-  }
-};
-
-
-
-// Filter files based on active tab and search query
+  // Filter files based on active tab and search query
   const filteredFiles = files.filter((file) => {
     const matchesSearch = file.name
       .toLowerCase()
@@ -158,7 +153,7 @@ const fetchFilesFromBackend = async (userId) => {
     setUploadProgress(0);
 
     try {
-      const token = await auth.currentUser?.getIdToken();
+      const token = await auth.currentUser?.getIdToken(true);
       if (!token) {
         throw new Error("No authentication token available");
       }
@@ -185,6 +180,9 @@ const fetchFilesFromBackend = async (userId) => {
       }
 
       const uploadedFile = await response.json();
+
+      await fetchFilesFromBackend(user.uid);
+
       setFiles((prevFiles) => [uploadedFile, ...prevFiles]);
       setShowUploadModal(false);
     } catch (error) {

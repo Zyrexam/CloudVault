@@ -74,25 +74,31 @@ public class FileController {
         }
     }
 
+
     @PostMapping("/upload")
     public ResponseEntity<FileMetadata> uploadFile(
             @RequestParam("file") MultipartFile file,
+            @RequestHeader("X-User-Id") String userId,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            // Extract user ID from Firebase token
+            // Optional: Verify the token matches the user ID for extra security
             String token = authHeader.replace("Bearer ", "");
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
-            String userId = decodedToken.getUid();
+
+            // Verify that the token's UID matches the provided user ID
+            if (!decodedToken.getUid().equals(userId)) {
+                logger.error("Token UID does not match provided user ID");
+                return ResponseEntity.status(403).build();
+            }
 
             // Upload file and get metadata
             FileMetadata metadata = fileService.uploadFile(file, userId);
             return ResponseEntity.ok(metadata);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error uploading file for user: {}", userId, e);
             return ResponseEntity.badRequest().build();
         }
     }
-
     @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(
             @PathVariable String fileId,
