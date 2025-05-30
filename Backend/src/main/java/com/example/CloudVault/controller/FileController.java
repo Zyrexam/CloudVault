@@ -136,31 +136,10 @@ public class FileController {
             logger.error("Exception message: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
+
     }
-//    @PostMapping("/upload")
-//    public ResponseEntity<FileMetadata> uploadFile(
-//            @RequestParam("file") MultipartFile file,
-//            @RequestHeader("X-User-Id") String userId,
-//            @RequestHeader("Authorization") String authHeader) {
-//        try {
-//            // Optional: Verify the token matches the user ID for extra security
-//            String token = authHeader.replace("Bearer ", "");
-//            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
-//
-//            // Verify that the token's UID matches the provided user ID
-//            if (!decodedToken.getUid().equals(userId)) {
-//                logger.error("Token UID does not match provided user ID");
-//                return ResponseEntity.status(403).build();
-//            }
-//
-//            // Upload file and get metadata
-//            FileMetadata metadata = fileService.uploadFile(file, userId);
-//            return ResponseEntity.ok(metadata);
-//        } catch (Exception e) {
-//            logger.error("Error uploading file for user: {}", userId, e);
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
+
+
     @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(
             @PathVariable String fileId,
@@ -194,6 +173,7 @@ public class FileController {
         try {
             byte[] fileContent = fileService.downloadFile(userId, fileId);
             List<FileMetadata> files = fileService.getUserFiles(userId);
+
             FileMetadata file = files.stream()
                     .filter(f -> f.getId().equals(fileId))
                     .findFirst()
@@ -203,11 +183,15 @@ public class FileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getOriginalName() + "\"")
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .body(fileContent);
+
+
         } catch (Exception e) {
             logger.error("Error downloading file: {}, for user: {}", fileId, userId, e);
             return ResponseEntity.badRequest().build();
         }
     }
+
+
 
     @GetMapping("/{fileId}/preview")
     public ResponseEntity<String> getFilePreviewUrl(

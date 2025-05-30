@@ -207,7 +207,8 @@ const Dashboard = () => {
 
       await fetchFilesFromBackend(user.uid);
 
-      setFiles((prevFiles) => [uploadedFile, ...prevFiles]);
+      // setFiles((prevFiles) => [uploadedFile, ...prevFiles]);
+      
       setShowUploadModal(false);
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -219,48 +220,59 @@ const Dashboard = () => {
         fileInputRef.current.value = "";
       }
     }
-
-    // Handle file download
-    const handleFileDownload = async (file) => {
-      try {
-        const token = await auth.currentUser?.getIdToken();
-        if (!token) {
-          throw new Error("No authentication token available");
-        }
-
-        const response = await fetch(
-          `http://localhost:8080/api/files/${file.id}/download`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "X-User-Id": user.uid,
-            },
-            credentials: "include",
-          }
-        );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            navigate("/auth");
-            return;
-          }
-          throw new Error(`Download failed: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = file.originalName;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } catch (error) {
-        console.error("Error downloading file:", error);
-      }
-    };
   };
+
+
+
+
+
+
+
+
+
+  // Handle file download
+  const handleFileDownload = async (file) => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(
+        `http://localhost:8080/api/files/${file.id}/download`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-User-Id": user.uid,
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          navigate("/auth");
+          return;
+        }
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =  file.originalName || file.name || "file";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  };
+
+
+
 
   // Toggle star status
   const toggleStar = async (fileId) => {
@@ -448,9 +460,9 @@ const Dashboard = () => {
             <i className="fa-solid fa-cloud"></i>
             <span>GCP Cloud Storage</span>
           </div>
-          <div className="bucket-info">
+          {/* <div className="bucket-info">
             <span>Bucket: {userData.gcpBucket}</span>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -577,7 +589,7 @@ const Dashboard = () => {
               <div className="upload-info">
                 <i className="fa-solid fa-cloud-arrow-up"></i>
                 <p>Files will be uploaded to your GCP Cloud Storage bucket:</p>
-                <div className="bucket-name">{userData.gcpBucket}</div>
+                {/* <div className="bucket-name">{userData.gcpBucket}</div> */}
               </div>
 
               {isUploading ? (
